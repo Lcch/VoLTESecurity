@@ -70,6 +70,7 @@ public class IptableService extends Service{
     public void onDestroy() {
         super.onDestroy();
         active = false;
+        _iptables_utils.ClearAll();
     }
 
     @Override

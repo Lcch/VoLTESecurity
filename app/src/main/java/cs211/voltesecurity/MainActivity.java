@@ -217,12 +217,6 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void Test() {
-        String[] st = IptablesUtils.sendCommand("iptables -L -n");
-        for (String s : st) {
-            Log.v("Test: ", s);
-        }
-
-        /*
         String FILENAME = "hellotest.sh";
         String string = "while true; do\n" +
                         "   output=$(ps | grep cs211.voltesecurity)\n" +
@@ -240,7 +234,6 @@ public class MainActivity extends ActionBarActivity {
         }
         sendCommand("chmod 755 /data/data/cs211.voltesecurity/files/hellotest.sh");
         sendCommand("/data/data/cs211.voltesecurity/files/hellotest.sh &");
-        */
     }
     public void updateConfigFile() {
         if (config.exists())
