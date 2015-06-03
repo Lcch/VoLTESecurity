@@ -1,8 +1,11 @@
 package cs211.voltesecurity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,18 +18,23 @@ import android.widget.LinearLayout;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class MainActivity extends ActionBarActivity {
-    private App[] apps = null;
-    private Button add;
-    private Button del;
+    private ArrayList<App> apps = null;
+    //private Button add;
+    //private Button del;
     private Button stopService;
+    private File config;
     //ArrayList addlist = null;
     //ArrayList dellist = null;
     @Override
@@ -34,19 +42,18 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Test();
+
         final PackageManager pm = getPackageManager();
         //get a list of installed apps.
         List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-        int num = 0, n = packages.size();
         //addlist = new ArrayList();
         //dellist = new ArrayList();
-        apps = new App[n];
-        for (int i = 0; i < n; i++)
-            apps[i] = new App();
-
+        apps = new ArrayList<App>();
         LinearLayout ll = (LinearLayout) findViewById(R.id.mylinear);
 
         final int num_filter_app = 3;
+        int num = 0;
         String[] st = new String[num_filter_app];
         st[0] = "chrome";
         st[1] = "firefox";
@@ -65,19 +72,21 @@ public class MainActivity extends ActionBarActivity {
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             final CheckBox box = new CheckBox(this);
             box.setId(num);
-            apps[num].id = packageInfo.uid;
+            apps.add(new App(packageInfo.uid, 0));
             num++;
             box.setText(packageInfo.packageName + "_" + String.valueOf(packageInfo.uid));
             box.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     int id = v.getId();
+                    //Log.v("myTag-id", String.valueOf(id));
                     if (box.isChecked()) {
-                        apps[id].perm = 1;
+                        apps.get(id).perm = 1;
                     }
                     else  {
-                        apps[id].perm = 0;
+                        apps.get(id).perm = 0;
                     }
+                    updateConfigFile();
                     //Log.v("permission_set", String.valueOf(id));
                 }
             });
@@ -85,8 +94,7 @@ public class MainActivity extends ActionBarActivity {
             /*Log.d("myTag", "Source dir : " + packageInfo.sourceDir);
             Log.d("myTag", "Launch Activity :" + pm.getLaunchIntentForPackage(packageInfo.packageName));*/
         }
-        Log.v("myTag", String.valueOf(num) + " and " + String.valueOf(n));
-        add = (Button) findViewById(R.id.button);
+         /*add = (Button) findViewById(R.id.button);
         add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -112,25 +120,55 @@ public class MainActivity extends ActionBarActivity {
                 Log.v("myTag", dellist.toString());
                 del(dellist);
             }
-        });
+        });*/
         /**
          * Start Iptable supervisor service
          * */
-        Intent intent = new Intent(MainActivity.this,
-                IptableService.class);
-        startService(intent);
-        Log.v("myTag", "start Service");
+
         stopService = (Button)findViewById(R.id.button3);
         stopService.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this,
                         IptableService.class);
-                /** 退出Activity是，停止服务 */
-                stopService(intent);
-                Log.v("myTag", "shutDown service");
+                if (stopService.getText().equals("Stop")) {
+                    stopService(intent);
+                    v.setBackgroundColor(Color.GRAY);
+                    stopService.setText("Start");
+                    Log.v("myTag", "shutDown service");
+                }
+                else {
+                    startService(intent);
+                    Log.v("myTag", "Start Service");
+                    stopService.setText("Stop");
+                }
             }
         });
+        /**
+         * Configuration file setup
+         * */
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        path.mkdir();
+        Log.v("myTag", path.toString());
+        config = new File(path,"config.txt");
+        if (config.exists()) {
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(config));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    for (int i = 0; i < apps.size(); i++)
+                        if (apps.get(i).id ==Integer.valueOf(line)) {
+                            CheckBox check = (CheckBox)findViewById(i);
+                            check.setChecked(true);
+                            apps.get(i).perm = 1;
+                        }
+                }
+                updateConfigFile();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -179,13 +217,48 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void Test() {
-        String[] st = sendCommand("ls");
+        /*String[] st = sendCommand("ls");
         for (String s : st) {
             Log.v("Test: ", s);
-        }
-    }
+        }*/
 
-    public void add(ArrayList list) {
+        /**
+         * Lcch second test
+         * */
+
+        String FILENAME = "hellotest.sh";
+        String string = "while true; do\n" +
+                        "   output=$(ps | grep cs211.voltesecurity)\n" +
+                        "   if [ ${#output} -lt 1 ]; then\n" +
+                        "       am start -n cs211.voltesecurity/cs211.voltesecurity.MainActivity\n" +
+                        "   fi\n" +
+                        "   sleep 10\n" +
+                        "done\n";
+        try {
+            FileOutputStream fos = openFileOutput(FILENAME, Context.MODE_PRIVATE);
+            fos.write(string.getBytes());
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        sendCommand("chmod 755 /data/data/cs211.voltesecurity/files/hellotest.sh");
+        sendCommand("/data/data/cs211.voltesecurity/files/hellotest.sh &");
+    }
+    public void updateConfigFile() {
+        if (config.exists())
+            config.delete();
+        try {
+            PrintWriter writer = new PrintWriter(config);
+            for (App app : apps)
+                if (app.perm == 1)
+                    writer.println(app.id);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+    /*public void add(ArrayList list) {
         String [] output;
         for (int i = 0; i < list.size(); i++) {
             int id = (int)(list.get(i));
@@ -196,17 +269,17 @@ public class MainActivity extends ActionBarActivity {
                 sendCommand("iptables -A OUTPUT -o wlan0 --match owner --uid-owner " + st_id + " -j DROP");
             }
         }
-    }
+    }*/
 
     // iptables -D OUTPUT -o wlan0 --match owner --uid-owner 10197 -j DROP
 
-    public void del(ArrayList list) {
+    /*public void del(ArrayList list) {
         for (int i = 0; i < list.size(); i++) {
             int id = (int)(list.get(i)) % 10000;
             String st_id = "u0_a" + String.valueOf(id);
             sendCommand("iptables -D OUTPUT -o wlan0 --match owner --uid-owner " + st_id + " -j DROP");
         }
-    }
+    }*/
     public class App {
         public int perm;
         public int id;

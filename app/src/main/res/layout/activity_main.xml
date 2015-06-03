@@ -29,28 +29,12 @@ android:layout_height="match_parent">
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ADD"
-            android:id="@+id/button"
-            android:layout_alignParentRight="true" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="DEL"
-            android:id="@+id/button2"
-            android:layout_below="@+id/button"
-            android:layout_alignLeft="@+id/button"
-            android:layout_alignStart="@+id/button" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="stop"
+            android:text="start"
             android:id="@+id/button3"
-            android:layout_alignParentTop="true"
-            android:layout_toLeftOf="@+id/button"
             android:background="@color/material_blue_grey_800"
-            android:layout_above="@+id/button2" />
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
 
     </RelativeLayout>
 </ScrollView>
