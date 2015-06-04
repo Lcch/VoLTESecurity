@@ -28,7 +28,7 @@ public class IptableService extends Service{
     @Override
     public void onCreate() {
         super.onCreate();
-        _iptables_utils = new IptablesUtils("wlan0");
+        _iptables_utils = new IptablesUtils("ip6tables", "rmnet1");
 
         active = true;
         File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
