@@ -80,8 +80,8 @@ public class IptablesUtils {
     public void SetDefault() {
         Clear(Filter(ParseIptables()));
         sendCommand(_iptables + " -I OUTPUT -o " + _interface_name + " -j DROP");
-        sendCommand(_iptables + " -I OUTPUT -o " + _interface_name + " -m owner --gid-owner root -j ACCEPT");
-        sendCommand(_iptables + " -I OUTPUT -o " + _interface_name + " -m owner --gid-owner system -j ACCEPT");
+        // sendCommand(_iptables + " -I OUTPUT -o " + _interface_name + " -m owner --gid-owner root -j ACCEPT");
+        sendCommand(_iptables + " -I OUTPUT -o " + _interface_name + " -m owner --uid-owner system -j ACCEPT");
     }
 
     private void AddEntry(int uid) {
@@ -103,7 +103,7 @@ public class IptablesUtils {
 
     private boolean Consistent(Integer[] uid_list, String[] st_list) {
         // 3 more default entries
-        if (uid_list.length + 3 > st_list.length) return false;
+        if (uid_list.length + 2 > st_list.length) return false;
 
         ArrayList mark = new ArrayList ();
         for (int i = 0; i < st_list.length; i++) mark.add(false);
@@ -118,18 +118,14 @@ public class IptablesUtils {
             else mark.set(id, true);
         }
         id = FindCmdinList("-A OUTPUT -o " + _interface_name + " -j DROP", st_list);
-        if (id != uid_list.length + 2) return false;
+        if (id != uid_list.length + 1) return false;
         else mark.set(id, true);
-        id = FindCmdinList("-A OUTPUT -o " + _interface_name + " -m owner --gid-owner 0 -j ACCEPT",
-                           st_list);
-        if (id < 0) return false;
-        else mark.set(id, true);
-        id = FindCmdinList("-A OUTPUT -o " + _interface_name + " -m owner --gid-owner 1000 -j ACCEPT",
+        id = FindCmdinList("-A OUTPUT -o " + _interface_name + " -m owner --uid-owner 1000 -j ACCEPT",
                            st_list);
         if (id < 0) return false;
         else mark.set(id, true);
 
-        for (int i = 0; i < uid_list.length + 3; i++) {
+        for (int i = 0; i < uid_list.length + 2; i++) {
             if (!(boolean)mark.get(i)) return false;
         }
         return true;
