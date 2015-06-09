@@ -52,15 +52,18 @@ public class MainActivity extends ActionBarActivity {
         apps = new ArrayList<App>();
         LinearLayout ll = (LinearLayout) findViewById(R.id.mylinear);
 
-        final int num_filter_app = 3;
+        final int num_filter_app = 7;
         int num = 0;
         String[] st = new String[num_filter_app];
         st[0] = "chrome";
         st[1] = "firefox";
         st[2] = "youtube";
-
+        st[3] = "volteattacker";
+        st[4] = "spotify";
+        st[5] = "wikipedia";
+        st[6] = "youdao";
         for (ApplicationInfo packageInfo : packages) {
-            if (packageInfo.uid <= 10000) continue;
+            //if (packageInfo.uid <= 10000) continue;
             boolean in_filter_app_list = false;
             for (String s : st) {
                 if (packageInfo.packageName.indexOf(s) >= 0) in_filter_app_list = true;
@@ -94,6 +97,28 @@ public class MainActivity extends ActionBarActivity {
             /*Log.d("myTag", "Source dir : " + packageInfo.sourceDir);
             Log.d("myTag", "Launch Activity :" + pm.getLaunchIntentForPackage(packageInfo.packageName));*/
         }
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        final CheckBox box  = new CheckBox(this);
+        box.setId(num);
+        apps.add(new App(0, 0));
+        box.setText("root_0");
+        box.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int id = v.getId();
+                //Log.v("myTag-id", String.valueOf(id));
+                if (box.isChecked()) {
+                    apps.get(id).perm = 1;
+                }
+                else  {
+                    apps.get(id).perm = 0;
+                }
+                updateConfigFile();
+            }
+        });
+        ll.addView(box, params);
          /*add = (Button) findViewById(R.id.button);
         add.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -241,8 +266,9 @@ public class MainActivity extends ActionBarActivity {
         try {
             PrintWriter writer = new PrintWriter(config);
             for (App app : apps)
-                if (app.perm == 1)
+                if (app.perm == 1) {
                     writer.println(app.id);
+                }
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
